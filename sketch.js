@@ -20,6 +20,9 @@ let rotVec = [1, 0];
 // Textures
 let foxMan;
 
+// Other variables
+let size = 600; // Size of box
+
 function preload()
 {
   foxMan = loadImage("textures/foxman.png");
@@ -42,13 +45,15 @@ function draw()
 
   // Handle camera movement
   cameraMovement();
-  
+
   // Customize objects
   noStroke();
   lights();
 
+  // Handle collisions with box
+  handleBoxCollisions();
+
   // Create a box with size
-  let size = 600;
   addPlane(0, 0,  size/2, size, foxMan,  0, 0);
   addPlane(0, 0, -size/2, size, foxMan,  0, 0);
   addPlane(0,  size/2, 0, size, foxMan, 90, 0);
@@ -117,4 +122,16 @@ function cameraMovement()
   camera(cam[0],          cam[1],          cam[2], 
          cam[0] + dir[0], cam[1] + dir[1], cam[2] + dir[2], 
          dir[3],          dir[4],          dir[5]);
+}
+
+function handleBoxCollisions()
+{
+  // Check for collisions with the box along all three axies
+  for (let i = 0; i < 3; i++)
+  {
+    if (cam[i] > size / 2 - 60)
+      cam[i] = size / 2 - 60;
+    else if (cam[i] < -size / 2 + 60)
+      cam[i] = -size / 2 + 60;
+  }
 }
