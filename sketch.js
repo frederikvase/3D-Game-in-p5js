@@ -6,7 +6,7 @@ let dir = [1, 0, 0,  // z-direction
 let cam = [0, 0, 0]; // Camera position
 
 // Variables for movement
-let moveSpeed = 5;
+let moveSpeed = 4; 
 let xMove = 0;
 let yMove = 0;
 let zMove = 0;
@@ -14,14 +14,23 @@ let zMove = 0;
 // Variables for rotation
 let xRot = 0;
 let yRot = 0;
-let rotSpeed = 5;
+let rotSpeed = 6;
 let rotVec = [1, 0];
+
+// Variable for enemies
+let enemySpeed = 2;
+let enemyRadius = 30;
+let enemySpawnDistance = 500;
+
+let enemyCount = 20;
+let enemyPos = Array(enemyCount * 3).fill(1000);
+let enemyVel = Array(enemyCount * 3).fill(0);
 
 // Textures
 let foxMan;
 
 // Other variables
-let size = 600; // Size of box
+let size = 900; // Size of box
 
 function preload()
 {
@@ -35,8 +44,7 @@ function setup()
 
   // Calculate the 2D rotation vector so you don't 
   // have to calculate cos(rotSpeed) every frame
-  rotVec = [cos(rotSpeed),
-            sin(rotSpeed)];
+  rotVec = [cos(rotSpeed), sin(rotSpeed)];
 }
 
 function draw() 
@@ -52,6 +60,37 @@ function draw()
 
   // Handle collisions with box
   handleBoxCollisions();
+
+  // Update enemies
+  for (let i = 0; i < enemyCount; i++)
+  {
+    // Enemy movement
+    enemyPos[i * 3] += enemyVel[i * 3];
+    enemyPos[i * 3 + 1] += enemyVel[i * 3 + 1];
+    enemyPos[i * 3 + 2] += enemyVel[i * 3 + 2];
+
+    // Respawn enemy if it is out of bounds
+    if (abs(enemyPos[i * 3]) > 500 || 
+        abs(enemyPos[i * 3 + 1]) > 500 || 
+        abs(enemyPos[i * 3 + 2]) > 500)
+      initEnemies(i);
+
+    // Check for enemy / player collision
+    if (pow(enemyPos[i * 3] - cam[0], 2) + 
+        pow(enemyPos[i * 3 + 1] - cam[1], 2) + 
+        pow(enemyPos[i * 3 + 2] - cam[2], 2) < pow(enemyRadius + 40, 2))
+    {
+      // A collision has occoured!
+      restartScene();
+      return;
+    }
+
+    // Draw enemies
+    push();
+    translate(enemyPos[i * 3], enemyPos[i * 3 + 1], enemyPos[i * 3 + 2]);
+    sphere(enemyRadius);
+    pop();
+  }
 
   // Create a box with size
   addPlane(0, 0,  size/2, size, foxMan,  0, 0);
@@ -133,5 +172,53 @@ function handleBoxCollisions()
       cam[i] = size / 2 - 60;
     else if (cam[i] < -size / 2 + 60)
       cam[i] = -size / 2 + 60;
+  }
+}
+
+function restartScene()
+{
+  cam = [0, 0, 0];
+  dir = [1, 0, 0,
+         0, 1, 0,
+         0, 0, 1];
+  // Set enemies to new positions
+  for (let i = 0; i < enemyCount; i++)
+    initEnemies(i);
+}
+
+function initEnemies(i)
+{
+  // Initialize enemy positions and velocities
+  let axis = random([0, 1, 2]);
+  if (axis == 0) // X-axis
+  {
+    enemyPos[i * 3] = 500 * random([1, -1]);
+    enemyPos[i * 3 + 1] = random(-500, 500);
+    enemyPos[i * 3 + 2] = random(-500, 500);
+
+    enemyVel[i * 3] = -enemyPos[i * 3] / 500 * enemySpeed;
+    enemyVel[i * 3 + 1] = random(-enemySpeed * 0.5, enemySpeed * 0.5);
+    enemyVel[i * 3 + 2] = random(-enemySpeed * 0.5, enemySpeed * 0.5);
+  }
+  else if (axis == 1) // Y-axis
+  {
+    enemyPos[i * 3] = random(-500, 500);
+    enemyPos[i * 3 + 1] = 500 * random([1, -1]);
+    enemyPos[i * 3 + 2] = random(-500, 500);
+
+    enemyVel[i * 3] = random(-enemySpeed * 0.5, enemySpeed * 0.5);
+    enemyVel[i * 3 + 1] = -enemyPos[i * 3] / 500 * enemySpeed;
+    enemyVel[i * 3 + 2] = random(-enemySpeed * 0.5, enemySpeed * 0.5);
+
+  }
+  else // Z-axis
+  {
+    enemyPos[i * 3] = random(-500, 500);
+    enemyPos[i * 3 + 1] = random(-500, 500);
+    enemyPos[i * 3 + 2] = 500 * random([1, -1]);
+
+    enemyVel[i * 3] = random(-enemySpeed * 0.5, enemySpeed * 0.5);
+    enemyVel[i * 3 + 1] = random(-enemySpeed * 0.5, enemySpeed * 0.5);
+    enemyVel[i * 3 + 2]= -enemyPos[i * 3 + 2] / 500 * enemySpeed;
   }
 }
